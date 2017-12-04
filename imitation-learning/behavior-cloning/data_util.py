@@ -64,9 +64,6 @@ def process_data(args):
     train_data = ExpertEnvDataset(train_data)
     val_data = ExpertEnvDataset(val_data, (train_data.mean, train_data.std))
 
-    print("Train Data Stats",train_data.mean, train_data.std)
-    print("Val Data Stats",val_data.observations, train_data.std)
-
     pickle.dump((train_data.mean, train_data.std), open('stats/train.pth','wb'))
     return train_data, val_data
 

@@ -17,8 +17,14 @@ def run_policy(args):
 
     from policy.model import Net
     model = Net(env.observation_space.shape[0], env.action_space.shape[0])
+    # Is GPU available?
+    use_gpu = torch.cuda.is_available()
+    use_gpu = False
+    if use_gpu:
+        model=model.cuda()
+    
     model.load_state_dict(torch.load(args.model))
-    print('Using model: ', args.model)
+    print("Using model: ", args.model)
     model.eval()
 
     latest_stat = pickle.load(open(data_util.get_latest('stats/*'),'rb'))
@@ -32,7 +38,11 @@ def run_policy(args):
         while not done:
             obs = np.array(obs, dtype='float32')
             obs = data_util.normalize(obs, *latest_stat )
-            action = model(Variable(torch.from_numpy(obs), volatile=True)).data.numpy()
+            if use_gpu:
+                obs = torch.from_numpy(obs)
+                action = model(Variable(obs.cuda(), volatile=True)).data.numpy()
+            else:
+                action = model(Variable(torch.from_numpy(obs), volatile=True)).data.numpy()
             observations.append(obs)
             actions.append(action)
             obs, r, done, _ = env.step(action)

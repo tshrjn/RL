@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -8,6 +9,10 @@ from model_policy import Net
 import data_util
 
 def train_policy(args):
+    # Is GPU available?
+    use_gpu = torch.cuda.is_available()
+    use_gpu = False
+    
     # Get processed data
     train_data, val_data = data_util.process_data(args)
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, num_workers=1)
@@ -18,13 +23,19 @@ def train_policy(args):
 
     # Neural Network & optimizer
     model=Net(*train_data.dimensions())
+    if use_gpu:
+        model=model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     print("Starting training:")
     def train(epoch):
         model.train()
         for batch_idx, (data, target) in enumerate(train_loader):
-            data, target = Variable(data), Variable(target)
+            if use_gpu:
+                data, target = Variable(data.cuda()), Variable(target.cuda())                
+            else:
+                data, target = Variable(data), Variable(target)
+                
             optimizer.zero_grad()
             output = model(data)
             loss = F.mse_loss(output, target)
@@ -40,7 +51,10 @@ def train_policy(args):
         validation_loss = 0
         correct = 0
         for data, target in val_loader:
-            data, target = Variable(data, volatile=True), Variable(target)
+            if use_gpu:
+                data, target = Variable(data.cuda()), Variable(target.cuda())                
+            else:
+                data, target = Variable(data), Variable(target)
             output = model(data)
             validation_loss += F.mse_loss(output, target, size_average=False).data[0] # sum up batch loss
             # pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
@@ -51,8 +65,10 @@ def train_policy(args):
 
 
     for epoch in range(1, args.epochs + 1):
+        start = time.time()
         train(epoch)
         validation()
         model_file = 'model_' + str(epoch) + '.pth' #  
         torch.save(model.state_dict() , 'models/' + model_file)
         print('\nSaved model')
+        print('\nTime taken for epoch {} : {:.3}s\n'.format(epoch, time.time()-start))
