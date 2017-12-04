@@ -1,6 +1,8 @@
 '''
 Example Usage:
-python main.py --expert_policy_file experts/Hopper-v1.pkl --envname Hopper-v1 --epochs 100 --num-rollouts 100 --lr 0.005 --out data.pkl --log-interval 1000 --train
+python main.py --expert_policy_file experts/Hopper-v1.pkl --envname Hopper-v1 --epochs 11 --num-rollouts 1000 --lr 0.005 --out data.pkl --log-interval 1000 --train
+
+^ Optimal parameters
 
 Testing with rendering:
 python main.py --expert_policy_file experts/Hopper-v1.pkl --envname Hopper-v1 --test --render --model models/model.pth
@@ -33,7 +35,7 @@ def main():
     parser.add_argument('--out', type=str, help='save expert data to file')    
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--val-ratio', type=float, default=0.1)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--lr', type=float, default=0.005)
     parser.add_argument('--model', type=str, help='File to load model from')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
