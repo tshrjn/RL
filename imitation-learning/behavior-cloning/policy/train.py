@@ -13,11 +13,14 @@ def train_policy(args):
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, num_workers=1)
     val_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, num_workers=1)
 
-    print("Data Dim: ", train_data.dimensions())
+    print("Train Data Size: ", len(train_data))
+    print("Val Data Size: ", len(val_data))
+
     # Neural Network & optimizer
     model=Net(*train_data.dimensions())
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    print("Starting training:")
     def train(epoch):
         model.train()
         for batch_idx, (data, target) in enumerate(train_loader):
@@ -50,6 +53,6 @@ def train_policy(args):
     for epoch in range(1, args.epochs + 1):
         train(epoch)
         validation()
-        model_file = 'model'+ '.pth' #  + str(epoch) 
+        model_file = 'model_' + str(epoch) + '.pth' #  
         torch.save(model.state_dict() , 'models/' + model_file)
         print('\nSaved model')

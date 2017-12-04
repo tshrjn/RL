@@ -31,9 +31,9 @@ def main():
 
 
 def run_expert(args):
-    print('loading and building expert policy')
+    print('Loading and building expert policy')
     policy_fn = load.load_policy(args.expert_policy_file)
-    print('loaded and built')
+    print('Loaded and built')
 
     return run_policy(policy_fn, args)
 
@@ -73,13 +73,13 @@ def run_policy(policy_fn, args):
         print('std of return', np.std(returns))
 
         expert_data = {'observations': np.array(observations, dtype='float32'),
-                       'actions': np.array(actions),
-                       'returns': returns}
-        print('Correct Dims',expert_data['observations'].shape, 
-            expert_data['actions'].shape)
+                       'actions': np.array(actions)}
+                       # 'returns': returns}
+
 
         if args.out:
             pickle.dump(expert_data, open(args.out,'wb'))
+            print("Expert Env. Dataset built and saved.")
 
 
 if __name__ == '__main__':

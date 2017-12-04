@@ -14,16 +14,12 @@ class ExpertEnvDataset(Dataset):
         self.out_shape = data['actions'].shape[1:]
 
         self.mean = np.mean(data['observations'], axis=0)
-        self.std = np.mean(data['observations'], axis=0)
+        self.std = np.std(data['observations'], axis=0)
 
-        print (self.observations[0])
         if stat == None:
             self.observations = normalize(self.observations, self.mean, self.std)
         else:
             self.observations = normalize(self.observations, *stat)
-        # print(type(self.observations))
-
-
 
     def __len__(self):
         return len(self.observations)
@@ -44,7 +40,7 @@ class ExpertEnvDataset(Dataset):
         return sample
 
     def dimensions(self):
-        '''returns (in_shape, out_shape)'''
+        '''returns (flattened in_shape, flattened out_shape)'''
         return (len(self.observations[1].flatten()), 
             len(self.actions[1].flatten()) )
 
@@ -59,10 +55,17 @@ def normalize(data, mean, std):
 
 def process_data(args):
     data = pickle.load(open(args.out, 'rb'))
+    if args.small:
+        idx = np.random.randint(len(data['actions']), size=100)
+        data = {k: v[idx,:] for (k,v) in data.items()}
+
     train_data, val_data = split(data, args.val_ratio)
 
     train_data = ExpertEnvDataset(train_data)
     val_data = ExpertEnvDataset(val_data, (train_data.mean, train_data.std))
+
+    print("Train Data Stats",train_data.mean, train_data.std)
+    print("Val Data Stats",val_data.observations, train_data.std)
 
     pickle.dump((train_data.mean, train_data.std), open('stats/train.pth','wb'))
     return train_data, val_data
@@ -71,7 +74,7 @@ def process_data(args):
 def split(data, val_ratio):
     val_idx = int(len(data['actions'])*(1-val_ratio))
 
-    print("Split:", val_idx, len(data))
+    print("Split:", val_idx, len(data['actions']))
     train_data = {key: data[key][:val_idx] for key in data.keys()}
     val_data = {key: data[key][val_idx:] for key in data.keys()}
 
@@ -82,9 +85,7 @@ def get_latest(directory):
     import glob
     import os
 
-    list_of_files = glob.glob(directory)
+    list_of_files = glob.glob(directory.strip(' /*') + '/*')
     latest = max(list_of_files, key=os.path.getctime)
-    print(latest)
 
     return latest
-
